@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OMNI Brain</title>
+
+<style>
+body {
+  margin:0;
+  background:#0a0f1f;
+  color:#eaf0ff;
+  font-family:system-ui;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+#chat {
+  flex:1;
+  overflow:auto;
+  padding:12px;
+}
+
+.msg { margin:8px 0; }
+.user { color:#7ae3ff; }
+.bot { color:#aaffc8; }
+
+#inputBar {
+  display:flex;
+  border-top:1px solid #26304d;
+}
+
+input {
+  flex:1;
+  padding:12px;
+  background:#121a33;
+  border:none;
+  color:white;
+}
+
+button {
+  background:#58ff9a;
+  border:none;
+  padding:12px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="chat"></div>
+
+<div id="inputBar">
+  <input id="input" placeholder="You >" />
+  <button onclick="send()">Send</button>
+</div>
+
+<script>
+const MODEL = "phi3:mini";
+
+let memory = [];
+let godMode = false;
+let tasks = [];
+
+function add(text, cls){
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// =====================
+// MEMORY
+// =====================
+function storeMemory(text){
+  if(text.length > 30){
+    memory.push(text);
+    if(memory.length > 30) memory.shift();
+  }
+}
+
+function recallMemory(){
+  return memory.slice(-5).join("\n");
+}
+
+// =====================
+// GOD MODE
+// =====================
+function godModeAnswer(user){
+  let keywords = user.toLowerCase().split(" ");
+
+  return `⚡ GOD MODE ACTIVE
+
+Signal:
+${keywords.slice(0,6).join(", ")}
+
+System thinking:
+1. Break problem into parts
+2. Find smallest useful step
+3. Execute
+4. Learn from result
+
+Best move:
+Build the smallest working version first.`;
+}
+
+// =====================
+// SKILLS
+// =====================
+function runSkills(user){
+  let clean = user.toLowerCase();
+
+  // math
+  try {
+    if(/^[0-9+\-*/(). ]+$/.test(clean)){
+      return `${clean} = ${eval(clean)}`;
+    }
+  } catch {}
+
+  // todo
+  if(clean.startsWith("todo ")){
+    let task = user.slice(5);
+    tasks.push(task);
+    return "Task saved: " + task;
+  }
+
+  if(clean === "tasks"){
+    if(tasks.length === 0) return "No tasks.";
+    return tasks.map((t,i)=>`${i+1}. ${t}`).join("\n");
+  }
+
+  // plan
+  if(clean.includes("plan")){
+    return `Plan:
+1. Define goal
+2. Break into steps
+3. Build smallest version
+4. Test
+5. Improve`;
+  }
+
+  return null;
+}
+
+// =====================
+// LLM (OLLAMA)
+// =====================
+async function askLLM(prompt){
+  try{
+    const res = await fetch("http://localhost:11434/api/generate", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        prompt: prompt,
+        stream: false
+      })
+    });
+
+    const data = await res.json();
+    return data.response;
+  } catch {
+    return "⚠️ Ollama not connected.";
+  }
+}
+
+// =====================
+// THINK
+// =====================
+async function think(user){
+  let clean = user.toLowerCase();
+
+  if(clean === "god mode"){
+    godMode = !godMode;
+    return godMode ? "God Mode ON ⚡" : "God Mode OFF";
+  }
+
+  if(clean === "help"){
+    return `Commands:
+- god mode
+- todo [task]
+- tasks
+- math (2+2)
+- plan`;
+  }
+
+  if(godMode){
+    return godModeAnswer(user);
+  }
+
+  let skill = runSkills(user);
+  if(skill) return skill;
+
+  let mem = recallMemory();
+
+  let prompt = `
+You are OMNI — an intelligent system.
+
+Memory:
+${mem}
+
+User:
+${user}
+
+Respond clearly and naturally:
+`;
+
+  let reply = await askLLM(prompt);
+
+  storeMemory(user);
+
+  return reply;
+}
+
+// =====================
+// UI
+// =====================
+async function send(){
+  let input = document.getElementById("input");
+  let text = input.value;
+  if(!text) return;
+
+  add("You: " + text, "user");
+  input.value = "";
+
+  add("OMNI: thinking...", "bot");
+
+  let response = await think(text);
+
+  chat.lastChild.textContent = "OMNI: " + response;
+}
+
+document.getElementById("input").addEventListener("keydown", e=>{
+  if(e.key === "Enter") send();
+});
+
+add("🧠 OMNI HYBRID BRAIN ONLINE", "bot");
+</script>
+
+</body>
+</html>
