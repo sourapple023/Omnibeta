@@ -22,7 +22,7 @@ body {
   padding:12px;
 }
 
-.msg { margin:8px 0; }
+.msg { margin:8px 0; white-space:pre-wrap; }
 .user { color:#7ae3ff; }
 .bot { color:#aaffc8; }
 
@@ -43,7 +43,6 @@ button {
   background:#58ff9a;
   border:none;
   padding:12px;
-  cursor:pointer;
 }
 </style>
 </head>
@@ -58,23 +57,18 @@ button {
 </div>
 
 <script>
+// =========================
+// STATE (same as Python)
+// =========================
 const MODEL = "phi3:mini";
 
 let memory = [];
 let godMode = false;
 let tasks = [];
 
-function add(text, cls){
-  const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-// =====================
+// =========================
 // MEMORY
-// =====================
+// =========================
 function storeMemory(text){
   if(text.length > 30){
     memory.push(text);
@@ -86,11 +80,33 @@ function recallMemory(){
   return memory.slice(-5).join("\n");
 }
 
-// =====================
+// =========================
+// LLM (replaces subprocess)
+// =========================
+async function askLLM(prompt){
+  try {
+    const res = await fetch("http://127.0.0.1:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        prompt: prompt,
+        stream: false
+      })
+    });
+
+    const data = await res.json();
+    return data.response.trim();
+  } catch {
+    return "⚠️ Make sure Ollama is running.";
+  }
+}
+
+// =========================
 // GOD MODE
-// =====================
+// =========================
 function godModeAnswer(user){
-  let keywords = user.toLowerCase().split(" ");
+  const keywords = user.toLowerCase().split(" ");
 
   return `⚡ GOD MODE ACTIVE
 
@@ -107,33 +123,33 @@ Best move:
 Build the smallest working version first.`;
 }
 
-// =====================
+// =========================
 // SKILLS
-// =====================
+// =========================
 function runSkills(user){
-  let clean = user.toLowerCase();
+  const clean = user.toLowerCase();
 
   // math
   try {
-    if(/^[0-9+\-*/(). ]+$/.test(clean)){
+    if (/^[0-9+\-*/(). ]+$/.test(clean)) {
       return `${clean} = ${eval(clean)}`;
     }
   } catch {}
 
   // todo
-  if(clean.startsWith("todo ")){
-    let task = user.slice(5);
+  if (clean.startsWith("todo ")) {
+    const task = user.slice(5);
     tasks.push(task);
-    return "Task saved: " + task;
+    return `Task saved: ${task}`;
   }
 
-  if(clean === "tasks"){
-    if(tasks.length === 0) return "No tasks.";
+  if (clean === "tasks") {
+    if (!tasks.length) return "No tasks.";
     return tasks.map((t,i)=>`${i+1}. ${t}`).join("\n");
   }
 
   // plan
-  if(clean.includes("plan")){
+  if (clean.includes("plan")) {
     return `Plan:
 1. Define goal
 2. Break into steps
@@ -145,58 +161,40 @@ function runSkills(user){
   return null;
 }
 
-// =====================
-// LLM (OLLAMA)
-// =====================
-async function askLLM(prompt){
-  try{
-    const res = await fetch("http://localhost:11434/api/generate", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        model: MODEL,
-        prompt: prompt,
-        stream: false
-      })
-    });
-
-    const data = await res.json();
-    return data.response;
-  } catch {
-    return "⚠️ Ollama not connected.";
-  }
-}
-
-// =====================
+// =========================
 // THINK
-// =====================
+// =========================
 async function think(user){
-  let clean = user.toLowerCase();
+  const clean = user.toLowerCase();
 
-  if(clean === "god mode"){
+  // commands
+  if (clean === "god mode") {
     godMode = !godMode;
     return godMode ? "God Mode ON ⚡" : "God Mode OFF";
   }
 
-  if(clean === "help"){
+  if (clean === "help") {
     return `Commands:
 - god mode
 - todo [task]
 - tasks
-- math (2+2)
+- math (e.g. 2+2)
 - plan`;
   }
 
-  if(godMode){
+  // god mode override
+  if (godMode) {
     return godModeAnswer(user);
   }
 
-  let skill = runSkills(user);
-  if(skill) return skill;
+  // skills
+  const skill = runSkills(user);
+  if (skill) return skill;
 
-  let mem = recallMemory();
+  // LLM
+  const mem = recallMemory();
 
-  let prompt = `
+  const prompt = `
 You are OMNI — an intelligent system.
 
 Memory:
@@ -208,19 +206,27 @@ ${user}
 Respond clearly and naturally:
 `;
 
-  let reply = await askLLM(prompt);
+  const reply = await askLLM(prompt);
 
   storeMemory(user);
 
   return reply;
 }
 
-// =====================
-// UI
-// =====================
+// =========================
+// UI LOOP (replaces while True)
+// =========================
+function add(text, cls){
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
 async function send(){
-  let input = document.getElementById("input");
-  let text = input.value;
+  const input = document.getElementById("input");
+  const text = input.value.trim();
   if(!text) return;
 
   add("You: " + text, "user");
@@ -228,7 +234,7 @@ async function send(){
 
   add("OMNI: thinking...", "bot");
 
-  let response = await think(text);
+  const response = await think(text);
 
   chat.lastChild.textContent = "OMNI: " + response;
 }
