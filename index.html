@@ -46,44 +46,122 @@ button {
 <div id="log">🧠 OMNI HYBRID BRAIN ONLINE\n</div>
 
 <div id="bar">
-  <input id="input" placeholder="You >" />
+  <input id="input" placeholder="You >" autofocus />
   <button onclick="send()">Send</button>
 </div>
 
 <script>
+const URL = "http://192.168.88.12:5055/think"
+
 let log = document.getElementById("log")
 let input = document.getElementById("input")
 
+let history = []
+let historyIndex = -1
+
+// =========================
+// LOG
+// =========================
 function add(text) {
   log.textContent += "\n" + text + "\n"
   log.scrollTop = log.scrollHeight
 }
 
+// =========================
+// LOCAL FALLBACK
+// =========================
+function localBrain(text) {
+  let clean = text.toLowerCase()
+
+  if (clean === "help") {
+    return "Commands: help, clear"
+  }
+
+  if (clean === "clear") {
+    log.textContent = "🧠 OMNI RESET\n"
+    return null
+  }
+
+  return "⚠️ Backend offline"
+}
+
+// =========================
+// SEND
+// =========================
 async function send() {
   let text = input.value.trim()
   if (!text) return
 
+  history.push(text)
+  historyIndex = history.length
+
   add("You > " + text)
   input.value = ""
 
+  add("OMNI:\nthinking...")
+
   try {
-    let res = await fetch("http://192.168.88.12:5055/think", {
+    let res = await fetch(URL, {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({input: text})
     })
 
     let data = await res.json()
-    add("OMNI:\n" + data.output)
+
+    replaceLast("OMNI:\n" + data.output)
 
   } catch {
-    add("⚠️ Cannot reach OMNI backend")
+    let fallback = localBrain(text)
+    if (fallback) replaceLast("OMNI:\n" + fallback)
   }
 }
 
+// =========================
+// REPLACE LAST (for loading)
+// =========================
+function replaceLast(text) {
+  let lines = log.textContent.split("\n")
+  lines.splice(lines.length - 2, 2, text, "")
+  log.textContent = lines.join("\n")
+}
+
+// =========================
+// HISTORY NAVIGATION
+// =========================
 input.addEventListener("keydown", e => {
+
   if (e.key === "Enter") send()
+
+  if (e.key === "ArrowUp") {
+    if (historyIndex > 0) {
+      historyIndex--
+      input.value = history[historyIndex]
+    }
+  }
+
+  if (e.key === "ArrowDown") {
+    if (historyIndex < history.length - 1) {
+      historyIndex++
+      input.value = history[historyIndex]
+    } else {
+      input.value = ""
+    }
+  }
 })
+
+// =========================
+// PING BACKEND
+// =========================
+async function checkBackend() {
+  try {
+    await fetch(URL, { method: "POST", body: "{}" })
+  } catch {
+    add("⚠️ Backend not reachable at start")
+  }
+}
+
+checkBackend()
 </script>
 
 </body>
