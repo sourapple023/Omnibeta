@@ -3,329 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-translate="appTitle">Gemini Flash AI</title>
-    <!-- Marked.js for Markdown rendering -->
+    <title>Gemini 2.5 Flash UI</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --primary: #1a73e8;
-            --primary-hover: #1557b0;
-            --bg-canvas: #f8f9fa;
-            --bg-card: #ffffff;
-            --text-main: #202124;
-            --text-sub: #5f6368;
-            --border: #dadce0;
-            --ai-bubble: #f1f3f4;
-            --user-bubble: #e8f0fe;
+            --primary: #4b7bec;
+            --bg-main: #f0f2f5;
+            --sidebar-bg: #ffffff;
+            --chat-bg: #ffffff;
+            --user-msg: #4b7bec;
+            --ai-msg: #f1f3f4;
+            --text-dark: #2f3542;
+            --text-light: #f1f2f6;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            background-color: var(--bg-canvas);
-            color: var(--text-main);
             display: flex;
-            justify-content: center;
             height: 100vh;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
         }
 
-        #container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--bg-card);
+        /* Sidebar / Settings */
+        #sidebar {
+            width: 300px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid #dcdde1;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin: 20px;
-            border-radius: 12px;
-            overflow: hidden;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
         }
 
-        /* Header & Settings */
-        header {
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff;
-        }
-
-        h1 { font-size: 1.25rem; margin: 0; color: var(--primary); }
-
-        .settings-bar {
-            display: flex;
-            gap: 10px;
-            background: #f1f3f4;
-            padding: 8px 15px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-        }
-
-        .input-group { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-
-        input, select, textarea {
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 10px;
+        .sidebar-header { font-weight: bold; font-size: 1.2rem; margin-bottom: 25px; color: var(--primary); }
+        
+        .setting-item { margin-bottom: 20px; }
+        .setting-item label { display: block; font-size: 0.85rem; margin-bottom: 8px; font-weight: 600; }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dcdde1;
+            border-radius: 8px;
+            box-sizing: border-box;
             outline: none;
+            transition: border 0.3s;
         }
 
-        /* Chat Area */
-        #chat-history {
+        input:focus { border-color: var(--primary); }
+
+        #save-key-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* Main Chat Area */
+        #main-chat {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #chat-window {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 25px;
+            padding: 40px 15%;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            background: #fff;
         }
 
-        .chat-message {
+        .msg { max-width: 80%; padding: 15px 20px; border-radius: 15px; line-height: 1.6; position: relative; }
+        .user { align-self: flex-end; background: var(--user-msg); color: white; border-bottom-right-radius: 2px; }
+        .ai { align-self: flex-start; background: var(--ai-msg); color: var(--text-dark); border-bottom-left-radius: 2px; }
+
+        .ai pre { background: #2f3542; color: #ffa502; padding: 10px; border-radius: 8px; overflow-x: auto; }
+
+        /* Input Bar */
+        .input-area {
+            padding: 20px 15%;
+            background: white;
+            border-top: 1px solid #dcdde1;
+        }
+
+        .input-container {
             display: flex;
-            flex-direction: column;
-            max-width: 85%;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .chat-message.user { align-self: flex-end; }
-        .chat-message.ai { align-self: flex-start; }
-
-        .message-bubble {
-            padding: 12px 18px;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .user .message-bubble {
-            background-color: var(--user-bubble);
-            color: #174ea6;
-            border-bottom-right-radius: 4px;
-        }
-
-        .ai .message-bubble {
-            background-color: var(--ai-bubble);
-            color: var(--text-main);
-            border-bottom-left-radius: 4px;
-        }
-
-        /* Markdown Styling */
-        .message-bubble pre {
-            background: #202124;
-            color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-        .message-bubble code { font-family: monospace; background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; }
-
-        /* Input Area */
-        .input-footer {
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            background: #fff;
-        }
-
-        .input-wrapper {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
             background: #f1f3f4;
             padding: 10px 15px;
-            border-radius: 24px;
+            border-radius: 30px;
+            align-items: center;
         }
 
         #user-input {
             flex-grow: 1;
             border: none;
             background: transparent;
-            resize: none;
-            max-height: 150px;
-            padding: 8px 0;
+            padding: 10px;
             font-size: 1rem;
+            outline: none;
+            resize: none;
         }
 
-        #send-button {
+        #send-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        #send-button:hover:not(:disabled) { background: var(--primary-hover); }
-        #send-button:disabled { background: #ccc; cursor: not-allowed; }
-
-        .loading { display: none; text-align: center; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px; }
-        .loading.visible { display: block; }
+        .loading-dots { font-size: 0.8rem; color: #7f8c8d; margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body>
 
-<div id="container">
-    <header>
-        <h1 data-translate="headerTitle">Gemini Flash 2.0</h1>
-        <button id="clear-chat-button" style="background:none; border:1px solid #ccc; border-radius:4px; cursor:pointer; font-size: 12px; padding: 4px 8px;" data-translate="clearChatButton">Clear Chat</button>
-    </header>
-
-    <div class="settings-bar">
-        <div class="input-group">
-            <label data-translate="apiKeyLabel">API Key:</label>
-            <input type="password" id="api-key-input" placeholder="Paste key here...">
-            <button id="save-api-key-button" data-translate="saveButton">Save</button>
-        </div>
-        <div class="input-group">
-            <select id="language-selector">
+    <aside id="sidebar">
+        <div class="sidebar-header" data-key="app_title">Gemini 2.5 Flash</div>
+        
+        <div class="setting-item">
+            <label data-key="lang_label">Language / 언어</label>
+            <select id="lang-select">
                 <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="ko">한국어</option>
+                <option value="ko">한국어 (Korean)</option>
             </select>
         </div>
-        <span id="api-key-status" style="font-size: 11px;"></span>
-    </div>
 
-    <div id="chat-history">
-        <!-- Messages appear here -->
-    </div>
-
-    <div class="input-footer">
-        <div id="loading-indicator" class="loading">Gemini is thinking...</div>
-        <div class="input-wrapper">
-            <textarea id="user-input" rows="1" placeholder="Ask me anything..." data-translate="inputPlaceholder"></textarea>
-            <button id="send-button" data-translate="sendButton">Send</button>
+        <div class="setting-item">
+            <label data-key="api_label">API Key</label>
+            <input type="password" id="api-key" placeholder="Enter Gemini API Key">
+            <button id="save-key-btn" data-key="save_btn">Save Key</button>
         </div>
-    </div>
-</div>
+
+        <div style="margin-top: auto; font-size: 0.75rem; color: #95a5a6;">
+            Model: gemini-2.5-flash
+        </div>
+    </aside>
+
+    <main id="main-chat">
+        <div id="chat-window">
+            <!-- Messages load here -->
+        </div>
+
+        <div class="input-area">
+            <div id="loader" class="loading-dots" data-key="loading_text">Thinking...</div>
+            <div class="input-container">
+                <textarea id="user-input" rows="1" data-key="input_placeholder" placeholder="Type a message..."></textarea>
+                <button id="send-btn">➔</button>
+            </div>
+        </div>
+    </main>
 
 <script>
-    const API_KEY_STORAGE_KEY = 'geminiApiKey';
-    const GEMINI_MODEL = 'gemini-2.5-flash'; 
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=`;
+    const translations = {
+        en: {
+            app_title: "Gemini 2.5 Flash",
+            lang_label: "Language",
+            api_label: "API Key",
+            save_btn: "Save Key",
+            input_placeholder: "Type a message...",
+            loading_text: "Gemini 2.5 is thinking...",
+            key_saved: "Key Saved!",
+            key_removed: "Key Removed"
+        },
+        ko: {
+            app_title: "제미나이 2.5 플래시",
+            lang_label: "언어 설정",
+            api_label: "API 키",
+            save_btn: "키 저장",
+            input_placeholder: "메시지를 입력하세요...",
+            loading_text: "제미나이가 생각 중입니다...",
+            key_saved: "키가 저장되었습니다!",
+            key_removed: "키가 삭제되었습니다"
+        }
+    };
 
-    const chatHistory = document.getElementById('chat-history');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    const apiKeyInput = document.getElementById('api-key-input');
-    const saveApiKeyButton = document.getElementById('save-api-key-button');
-    const loadingIndicator = document.getElementById('loading-indicator');
+    const config = {
+        model: 'gemini-2.5-flash',
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='
+    };
 
-    let conversationHistory = [];
-    let currentApiKey = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+    let chatHistory = [];
+    let apiKey = localStorage.getItem('gemini_key') || '';
 
-    // Initialize Markdown
-    marked.setOptions({ gfm: true, breaks: true });
-
-    if (currentApiKey) {
-        apiKeyInput.placeholder = "Key Stored (Ends in " + currentApiKey.slice(-4) + ")";
-        saveApiKeyButton.textContent = "Remove";
+    // Initialize UI
+    function updateLanguage(lang) {
+        document.querySelectorAll('[data-key]').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = translations[lang][key];
+            } else {
+                el.textContent = translations[lang][key];
+            }
+        });
     }
 
-    function displayMessage(role, text) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `chat-message ${role}`;
-        
-        const bubble = document.createElement('div');
-        bubble.className = 'message-bubble';
-        
-        // Render Markdown for AI, plain text for User
-        if (role === 'ai') {
-            bubble.innerHTML = marked.parse(text);
-        } else {
-            bubble.textContent = text;
-        }
-
-        msgDiv.appendChild(bubble);
-        chatHistory.appendChild(msgDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
+    if(apiKey) {
+        document.getElementById('api-key').placeholder = "••••••••••••";
+        document.getElementById('save-key-btn').textContent = "Clear Key";
     }
 
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text || !currentApiKey) {
-            if (!currentApiKey) alert("Please enter and save an API Key first.");
-            return;
-        }
+    // Handle Language Toggle
+    document.getElementById('lang-select').addEventListener('change', (e) => {
+        updateLanguage(e.target.value);
+    });
 
-        displayMessage('user', text);
-        userInput.value = '';
-        userInput.style.height = 'auto';
+    async function callGemini(prompt) {
+        if(!apiKey) return alert("Please set your API Key first.");
         
-        conversationHistory.push({ role: "user", parts: [{ text: text }] });
-        
-        loadingIndicator.classList.add('visible');
-        sendButton.disabled = true;
+        document.getElementById('loader').style.display = 'block';
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        renderMessage('user', prompt);
 
         try {
-            const response = await fetch(GEMINI_API_URL + currentApiKey, {
+            const response = await fetch(config.url + apiKey, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: conversationHistory,
-                    systemInstruction: { parts: [{ text: "You are a helpful, concise AI assistant. Use markdown for lists and code." }] }
-                })
+                body: JSON.stringify({ contents: chatHistory })
             });
-
-            const data = await response.json();
-            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error: No response.";
             
-            displayMessage('ai', aiText);
-            conversationHistory.push({ role: "model", parts: [{ text: aiText }] });
-        } catch (e) {
-            displayMessage('ai', "System Error: Unable to reach Gemini.");
+            const data = await response.json();
+            const reply = data.candidates[0].content.parts[0].text;
+            
+            chatHistory.push({ role: "model", parts: [{ text: reply }] });
+            renderMessage('ai', reply);
+        } catch (err) {
+            renderMessage('ai', "Error: Check your API Key or connection.");
         } finally {
-            loadingIndicator.classList.remove('visible');
-            sendButton.disabled = false;
+            document.getElementById('loader').style.display = 'none';
         }
+    }
+
+    function renderMessage(role, text) {
+        const win = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        div.innerHTML = role === 'ai' ? marked.parse(text) : text;
+        win.appendChild(div);
+        win.scrollTop = win.scrollHeight;
     }
 
     // Event Listeners
-    sendButton.addEventListener('click', sendMessage);
-    
-    userInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+    document.getElementById('send-btn').onclick = () => {
+        const input = document.getElementById('user-input');
+        if(input.value.trim()) {
+            callGemini(input.value.trim());
+            input.value = '';
         }
-    });
+    };
 
-    userInput.addEventListener('input', () => {
-        userInput.style.height = 'auto';
-        userInput.style.height = userInput.scrollHeight + 'px';
-    });
-
-    saveApiKeyButton.addEventListener('click', () => {
-        if (currentApiKey) {
-            localStorage.removeItem(API_KEY_STORAGE_KEY);
-            currentApiKey = '';
-            apiKeyInput.value = '';
-            apiKeyInput.placeholder = "Paste key here...";
-            saveApiKeyButton.textContent = "Save";
+    document.getElementById('save-key-btn').onclick = () => {
+        const input = document.getElementById('api-key');
+        if(apiKey) {
+            localStorage.removeItem('gemini_key');
+            apiKey = '';
+            input.value = '';
+            location.reload();
         } else {
-            const key = apiKeyInput.value.trim();
-            if (key) {
-                localStorage.setItem(API_KEY_STORAGE_KEY, key);
-                currentApiKey = key;
-                apiKeyInput.value = '';
-                apiKeyInput.placeholder = "Key Saved!";
-                saveApiKeyButton.textContent = "Remove";
-            }
+            apiKey = input.value.trim();
+            localStorage.setItem('gemini_key', apiKey);
+            alert("Key Saved");
+            location.reload();
         }
-    });
+    };
 
-    document.getElementById('clear-chat-button').addEventListener('click', () => {
-        chatHistory.innerHTML = '';
-        conversationHistory = [];
+    // Auto-resize textarea
+    document.getElementById('user-input').addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
     });
 </script>
-
 </body>
 </html>
