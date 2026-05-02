@@ -5,116 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate="appTitle">Gemini 1.5 Flash Chat</title>
     <style>
+        /* Base styles */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f2f5;
+            background-color: #f5f7fa; /* Lighter, modern background */
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
             color: #333;
+            line-height: 1.6;
         }
         #container {
             background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 16px; /* Slightly more rounded corners */
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12); /* More pronounced shadow */
             width: 100%;
-            max-width: 800px;
+            max-width: 850px; /* Slightly wider */
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            padding: 25px;
+            padding: 30px; /* Increased padding */
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         h1 {
             color: #1a73e8;
             text-align: center;
-            margin-bottom: 25px;
-            font-size: 2.2em;
-            font-weight: 600;
+            margin-bottom: 30px; /* More spacing */
+            font-size: 2.5em; /* Larger title */
+            font-weight: 700;
         }
+        /* Controls Section */
         #controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 15px;
-            background-color: #e8f0fe;
-            border-radius: 8px;
+            gap: 20px; /* Increased gap */
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #e8f0fe; /* Light blue background for controls */
+            border-radius: 12px; /* Rounded corners */
             align-items: center;
             justify-content: space-between;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
         }
         #api-key-section, #language-section {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        #api-key-input {
+        label {
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap; /* Prevent label from wrapping */
+        }
+        input[type="password"], input[type="text"], select, textarea {
             flex-grow: 1;
-            padding: 10px 12px;
-            border: 1px solid #c4c4c4;
-            border-radius: 6px;
+            padding: 12px 15px; /* More padding */
+            border: 1px solid #dcdfe6; /* Lighter border */
+            border-radius: 8px; /* More rounded */
             font-size: 1em;
-            min-width: 200px;
+            background-color: #ffffff;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        #api-key-input:focus {
+        input[type="password"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #1a73e8;
-            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25); /* More prominent focus */
+        }
+        #api-key-input {
+            min-width: 220px; /* Ensure input has enough width */
         }
         button {
             background-color: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
+            padding: 12px 20px; /* More padding */
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
         }
         button:hover {
             background-color: #1664c7;
-            transform: translateY(-1px);
+            transform: translateY(-2px); /* Slightly more lift */
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
         }
         button:active {
             transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(26, 115, 232, 0.2);
+        }
+        button#clear-chat-button { /* Style for the new clear chat button */
+            background-color: #6c757d;
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+        }
+        button#clear-chat-button:hover {
+            background-color: #5a6268;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        button.remove-key { /* Style for remove API key button state */
+            background-color: #dc3545; /* Red for removal */
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+        }
+        button.remove-key:hover {
+            background-color: #c82333;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         select {
-            padding: 10px 12px;
-            border: 1px solid #c4c4c4;
-            border-radius: 6px;
-            font-size: 1em;
-            background-color: white;
-            cursor: pointer;
-            min-width: 120px;
-        }
-        select:focus {
-            outline: none;
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+            min-width: 140px; /* Ensure select box has decent width */
         }
         #api-key-status {
             font-size: 0.9em;
-            color: #dc3545; /* Red for warning */
             margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: opacity 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+            min-width: 150px; /* Ensure it doesn't jump too much */
+            text-align: center;
         }
+        .status-success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Chat History */
         #chat-history {
             flex-grow: 1;
-            height: 450px;
+            height: 500px; /* Increased height */
             overflow-y: auto;
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 25px;
+            border-radius: 12px;
+            padding: 20px; /* More padding */
+            margin-bottom: 30px;
             background-color: #fdfdfd;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px; /* Increased gap between messages */
+            scroll-behavior: smooth; /* Smooth scrolling */
         }
         .chat-message {
             display: flex;
-            max-width: 85%;
+            max-width: 88%; /* Slightly wider messages */
+            animation: messageFadeIn 0.3s ease-out;
+        }
+        @keyframes messageFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .chat-message.user {
             justify-content: flex-end;
@@ -125,57 +174,64 @@
             align-self: flex-start;
         }
         .message-bubble {
-            padding: 12px 18px;
-            border-radius: 20px;
+            padding: 14px 20px; /* More padding */
+            border-radius: 24px; /* More rounded bubbles */
             line-height: 1.5;
             word-wrap: break-word;
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            white-space: pre-wrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Subtle shadow for bubbles */
             position: relative;
+            max-width: 100%;
         }
         .message-bubble.user {
-            background-color: #dcf8c6;
+            background-color: #e6ffed; /* Softer green */
             color: #333;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 8px; /* Slightly less rounded on one corner */
         }
         .message-bubble.ai {
-            background-color: #e0e0e0;
+            background-color: #f0f2f5; /* Light grey */
             color: #333;
-            border-bottom-left-radius: 5px;
+            border-bottom-left-radius: 8px;
         }
+
+        /* Input Area */
         #input-area {
             display: flex;
-            gap: 10px;
+            gap: 12px; /* Increased gap */
             align-items: center;
+            background-color: #ffffff;
+            padding-top: 10px; /* Space from chat history */
         }
         #user-input {
             flex-grow: 1;
-            padding: 12px 15px;
-            border: 1px solid #c4c4c4;
-            border-radius: 25px;
+            padding: 14px 18px; /* More padding */
+            border-radius: 28px; /* More rounded */
             font-size: 1.05em;
             resize: none;
-            min-height: 40px;
-            max-height: 150px;
+            min-height: 48px; /* Larger min-height */
+            max-height: 200px; /* Increased max-height */
             overflow-y: auto;
             line-height: 1.4;
-        }
-        #user-input:focus {
-            outline: none;
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for input */
         }
         #send-button {
-            border-radius: 25px;
-            padding: 12px 22px;
-            font-weight: 500;
+            border-radius: 28px; /* More rounded */
+            padding: 14px 24px; /* More padding */
+            font-weight: 600;
         }
+
+        /* Loading Indicator with Spinner */
         #loading-indicator {
-            text-align: center;
+            display: flex; /* Use flexbox for centering spinner and text */
+            justify-content: center;
+            align-items: center;
+            gap: 10px; /* Space between spinner and text */
             font-style: italic;
             color: #777;
-            margin-top: 10px;
-            visibility: hidden; /* Hidden by default */
+            margin-top: 15px;
+            margin-bottom: 15px; /* Added margin-bottom */
+            height: 24px; /* Give it a fixed height */
+            visibility: hidden;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -183,47 +239,79 @@
             visibility: visible;
             opacity: 1;
         }
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #1a73e8; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
             #container {
-                padding: 15px;
-                margin: 10px;
+                padding: 20px;
+                margin: 0;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             }
             h1 {
-                font-size: 1.8em;
-                margin-bottom: 20px;
+                font-size: 2em;
+                margin-bottom: 25px;
             }
             #controls {
                 flex-direction: column;
                 align-items: stretch;
-                padding: 10px;
-                gap: 10px;
+                padding: 15px;
+                gap: 15px;
             }
             #api-key-section, #language-section {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 5px;
+                gap: 8px;
             }
-            #api-key-input, select {
+            #api-key-input, select, button {
                 min-width: unset;
                 width: 100%;
             }
             #api-key-status {
                 margin-left: 0;
-                margin-top: 5px;
+                margin-top: 8px;
                 text-align: center;
             }
             #send-button {
-                padding: 10px 18px;
+                padding: 12px 20px;
             }
             #chat-history {
-                height: 350px;
-                padding: 10px;
+                height: 400px;
+                padding: 15px;
+                margin-bottom: 20px;
             }
             .message-bubble {
-                padding: 10px 15px;
+                padding: 12px 18px;
                 font-size: 0.95em;
+                border-radius: 20px;
+            }
+            #user-input {
+                padding: 12px 15px;
+                min-height: 44px;
+                border-radius: 22px;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.7em;
+            }
+            .message-bubble {
+                font-size: 0.9em;
             }
         }
     </style>
@@ -235,7 +323,7 @@
         <div id="controls">
             <div id="api-key-section">
                 <label for="api-key-input" data-translate="apiKeyLabel">Google Gemini API Key:</label>
-                <input type="password" id="api-key-input" placeholder="Enter your API Key..." data-translate="apiKeyPlaceholder">
+                <input type="password" id="api-key-input" placeholder="" data-translate="apiKeyPlaceholder">
                 <button id="save-api-key-button" data-translate="saveButton">Save</button>
                 <span id="api-key-status"></span>
             </div>
@@ -248,15 +336,20 @@
                     <option value="de">Deutsch</option>
                     <option value="ja">日本語</option>
                     <option value="zh">中文</option>
+                    <option value="ko">한국어</option> <!-- Added Korean option -->
                 </select>
             </div>
+            <button id="clear-chat-button" data-translate="clearChatButton">Clear Chat</button> <!-- New Clear Chat button -->
         </div>
 
         <div id="chat-history">
             <!-- Chat messages will be appended here -->
         </div>
 
-        <div id="loading-indicator" data-translate="loadingText">AI is thinking...</div>
+        <div id="loading-indicator">
+            <div class="spinner"></div> <!-- Spinner element -->
+            <span data-translate="loadingText">AI is thinking...</span>
+        </div>
 
         <div id="input-area">
             <textarea id="user-input" placeholder="Type your message..." rows="1" data-translate="inputPlaceholder"></textarea>
@@ -267,7 +360,7 @@
     <script>
         const API_KEY_STORAGE_KEY = 'geminiApiKey';
         const LANGUAGE_STORAGE_KEY = 'appLanguage';
-        const GEMINI_MODEL = 'gemini-2.5-flash'; // Or gemini-1.5-flash
+        const GEMINI_MODEL = 'gemini-1.5-flash'; // Or gemini-1.5-flash (kept consistent)
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=`;
 
         // DOM Elements
@@ -279,6 +372,7 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const clearChatButton = document.getElementById('clear-chat-button'); // New DOM element
 
         let currentApiKey = '';
         let currentLanguage = 'en'; // Default language
@@ -292,15 +386,17 @@
                 apiKeyLabel: "Google Gemini API Key:",
                 apiKeyPlaceholder: "Enter your API Key...",
                 saveButton: "Save",
+                removeApiKeyButton: "Remove API Key", // New key
                 languageLabel: "Language:",
                 inputPlaceholder: "Type your message...",
                 sendButton: "Send",
                 loadingText: "AI is thinking...",
-                apiKeySaved: "API Key saved!",
+                apiKeySaved: "API Key saved successfully!",
                 apiKeyRemoved: "API Key removed.",
                 apiKeyError: "Please enter your API Key.",
                 apiError: "Error communicating with Gemini AI. Check your API key or try again later.",
-                networkError: "Network error. Please check your internet connection."
+                networkError: "Network error. Please check your internet connection.",
+                clearChatButton: "Clear Chat" // New key
             },
             es: {
                 appTitle: "Chat con Gemini 1.5 Flash",
@@ -308,15 +404,17 @@
                 apiKeyLabel: "Clave API de Google Gemini:",
                 apiKeyPlaceholder: "Introduce tu clave API...",
                 saveButton: "Guardar",
+                removeApiKeyButton: "Eliminar Clave API",
                 languageLabel: "Idioma:",
                 inputPlaceholder: "Escribe tu mensaje...",
                 sendButton: "Enviar",
                 loadingText: "La IA está pensando...",
-                apiKeySaved: "Clave API guardada!",
+                apiKeySaved: "¡Clave API guardada con éxito!",
                 apiKeyRemoved: "Clave API eliminada.",
                 apiKeyError: "Por favor, introduce tu clave API.",
                 apiError: "Error al comunicarse con Gemini AI. Verifica tu clave API o inténtalo de nuevo más tarde.",
-                networkError: "Error de red. Por favor, verifica tu conexión a internet."
+                networkError: "Error de red. Por favor, verifica tu conexión a internet.",
+                clearChatButton: "Limpiar Chat"
             },
             fr: {
                 appTitle: "Chat Gemini 1.5 Flash",
@@ -324,15 +422,17 @@
                 apiKeyLabel: "Clé API Google Gemini :",
                 apiKeyPlaceholder: "Entrez votre clé API...",
                 saveButton: "Enregistrer",
+                removeApiKeyButton: "Supprimer la Clé API",
                 languageLabel: "Langue :",
                 inputPlaceholder: "Tapez votre message...",
                 sendButton: "Envoyer",
                 loadingText: "L'IA réfléchit...",
-                apiKeySaved: "Clé API enregistrée !",
+                apiKeySaved: "Clé API enregistrée avec succès !",
                 apiKeyRemoved: "Clé API supprimée.",
                 apiKeyError: "Veuillez entrer votre clé API.",
                 apiError: "Erreur de communication avec Gemini AI. Vérifiez votre clé API ou réessayez plus tard.",
-                networkError: "Erreur réseau. Veuillez vérifier votre connexion internet."
+                networkError: "Erreur réseau. Veuillez vérifier votre connexion internet.",
+                clearChatButton: "Effacer le Chat"
             },
             de: {
                 appTitle: "Gemini 1.5 Flash Chat",
@@ -340,15 +440,17 @@
                 apiKeyLabel: "Google Gemini API-Schlüssel:",
                 apiKeyPlaceholder: "Geben Sie Ihren API-Schlüssel ein...",
                 saveButton: "Speichern",
+                removeApiKeyButton: "API-Schlüssel entfernen",
                 languageLabel: "Sprache:",
                 inputPlaceholder: "Geben Sie Ihre Nachricht ein...",
                 sendButton: "Senden",
                 loadingText: "KI denkt nach...",
-                apiKeySaved: "API-Schlüssel gespeichert!",
+                apiKeySaved: "API-Schlüssel erfolgreich gespeichert!",
                 apiKeyRemoved: "API-Schlüssel entfernt.",
                 apiKeyError: "Bitte geben Sie Ihren API-Schlüssel ein.",
                 apiError: "Fehler bei der Kommunikation mit Gemini AI. Überprüfen Sie Ihren API-Schlüssel oder versuchen Sie es später erneut.",
-                networkError: "Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung."
+                networkError: "Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.",
+                clearChatButton: "Chat leeren"
             },
             ja: {
                 appTitle: "Gemini 1.5 Flashチャット",
@@ -356,15 +458,17 @@
                 apiKeyLabel: "Google Gemini APIキー:",
                 apiKeyPlaceholder: "APIキーを入力...",
                 saveButton: "保存",
+                removeApiKeyButton: "APIキーを削除",
                 languageLabel: "言語:",
                 inputPlaceholder: "メッセージを入力...",
                 sendButton: "送信",
                 loadingText: "AIが考え中...",
-                apiKeySaved: "APIキーを保存しました！",
+                apiKeySaved: "APIキーを正常に保存しました！",
                 apiKeyRemoved: "APIキーを削除しました。",
                 apiKeyError: "APIキーを入力してください。",
                 apiError: "Gemini AIとの通信エラーです。APIキーを確認するか、後でもう一度お試しください。",
-                networkError: "ネットワークエラーです。インターネット接続を確認してください。"
+                networkError: "ネットワークエラーです。インターネット接続を確認してください。",
+                clearChatButton: "チャットをクリア"
             },
             zh: {
                 appTitle: "Gemini 1.5 Flash 聊天",
@@ -372,15 +476,35 @@
                 apiKeyLabel: "Google Gemini API 密钥:",
                 apiKeyPlaceholder: "输入您的API密钥...",
                 saveButton: "保存",
+                removeApiKeyButton: "删除API密钥",
                 languageLabel: "语言:",
                 inputPlaceholder: "输入您的消息...",
                 sendButton: "发送",
                 loadingText: "AI正在思考...",
-                apiKeySaved: "API密钥已保存！",
+                apiKeySaved: "API密钥已成功保存！",
                 apiKeyRemoved: "API密钥已移除。",
                 apiKeyError: "请输入您的API密钥。",
                 apiError: "与Gemini AI通信时出错。请检查您的API密钥或稍后再试。",
-                networkError: "网络错误。请检查您的互联网连接。"
+                networkError: "网络错误。请检查您的互联网连接。",
+                clearChatButton: "清除聊天"
+            },
+            ko: { // Added Korean translations
+                appTitle: "제미니 1.5 플래시 채팅",
+                headerTitle: "제미니 1.5 플래시 채팅",
+                apiKeyLabel: "Google Gemini API 키:",
+                apiKeyPlaceholder: "API 키를 입력하세요...",
+                saveButton: "저장",
+                removeApiKeyButton: "API 키 제거",
+                languageLabel: "언어:",
+                inputPlaceholder: "메시지를 입력하세요...",
+                sendButton: "보내기",
+                loadingText: "AI가 생각 중...",
+                apiKeySaved: "API 키가 성공적으로 저장되었습니다!",
+                apiKeyRemoved: "API 키가 제거되었습니다.",
+                apiKeyError: "API 키를 입력해주세요.",
+                apiError: "Gemini AI와 통신 중 오류가 발생했습니다. API 키를 확인하거나 나중에 다시 시도해주세요.",
+                networkError: "네트워크 오류입니다. 인터넷 연결을 확인해주세요.",
+                clearChatButton: "채팅 지우기"
             }
         };
 
@@ -399,12 +523,13 @@
                 }
             });
 
-            // Update API key related text
+            // Update API key related text specifically
             updateApiKeyUI();
         }
 
         function switchLanguage(lang) {
             currentLanguage = lang;
+            document.documentElement.lang = lang; // Set HTML lang attribute for better accessibility
             localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
             applyTranslations();
         }
@@ -414,40 +539,55 @@
             const key = localStorage.getItem(API_KEY_STORAGE_KEY);
             if (key) {
                 currentApiKey = key;
-                apiKeyInput.value = key;
+                apiKeyInput.value = ''; // Always keep input empty for security
             }
             updateApiKeyUI();
         }
 
         function saveApiKey() {
-            const key = apiKeyInput.value.trim();
-            if (key) {
-                currentApiKey = key;
-                localStorage.setItem(API_KEY_STORAGE_KEY, key);
-                apiKeyStatus.textContent = translations[currentLanguage].apiKeySaved;
-                apiKeyStatus.style.color = '#28a745'; // Green
-                setTimeout(() => apiKeyStatus.textContent = '', 3000);
-            } else {
+            if (saveApiKeyButton.classList.contains('remove-key')) {
+                // User wants to remove the API key
                 currentApiKey = '';
                 localStorage.removeItem(API_KEY_STORAGE_KEY);
-                apiKeyStatus.textContent = translations[currentLanguage].apiKeyError;
-                apiKeyStatus.style.color = '#dc3545'; // Red
-                setTimeout(() => apiKeyStatus.textContent = '', 3000);
+                apiKeyStatus.textContent = translations[currentLanguage].apiKeyRemoved;
+                apiKeyStatus.className = 'status-error'; // Style for error/removal
+                setTimeout(() => { apiKeyStatus.textContent = ''; apiKeyStatus.className = ''; }, 3000);
+            } else {
+                // User wants to save the API key
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    currentApiKey = key;
+                    localStorage.setItem(API_KEY_STORAGE_KEY, key);
+                    apiKeyStatus.textContent = translations[currentLanguage].apiKeySaved;
+                    apiKeyStatus.className = 'status-success'; // Style for success
+                    setTimeout(() => { apiKeyStatus.textContent = ''; apiKeyStatus.className = ''; }, 3000);
+                } else {
+                    currentApiKey = ''; // Clear if they tried to save empty
+                    localStorage.removeItem(API_KEY_STORAGE_KEY);
+                    apiKeyStatus.textContent = translations[currentLanguage].apiKeyError;
+                    apiKeyStatus.className = 'status-error'; // Style for error
+                    setTimeout(() => { apiKeyStatus.textContent = ''; apiKeyStatus.className = ''; }, 3000);
+                }
             }
-            updateApiKeyUI();
+            updateApiKeyUI(); // Update UI after saving/removing
         }
 
         function updateApiKeyUI() {
             if (currentApiKey) {
-                saveApiKeyButton.textContent = translations[currentLanguage].apiKeyRemoved;
-                apiKeyInput.type = 'text'; // Show key if saved (for editing)
-                apiKeyInput.placeholder = currentApiKey.substring(0, 5) + '...' + currentApiKey.substring(currentApiKey.length - 5);
-                apiKeyInput.value = ''; // Clear actual value to prevent accidental resave of partial value
+                // Show masked API key in placeholder, e.g., "••••••••••••••••ABCD"
+                apiKeyInput.placeholder = '••••••••••••••••' + currentApiKey.substring(currentApiKey.length - 4);
+                apiKeyInput.value = ''; // Ensure actual value is cleared for security
+                apiKeyInput.type = 'password'; // Keep it password type
+                saveApiKeyButton.textContent = translations[currentLanguage].removeApiKeyButton;
+                saveApiKeyButton.classList.add('remove-key'); // Add a class for styling removal button
+                apiKeyStatus.textContent = ''; // Clear status initially
             } else {
-                saveApiKeyButton.textContent = translations[currentLanguage].saveButton;
-                apiKeyInput.type = 'password';
                 apiKeyInput.placeholder = translations[currentLanguage].apiKeyPlaceholder;
                 apiKeyInput.value = '';
+                apiKeyInput.type = 'password';
+                saveApiKeyButton.textContent = translations[currentLanguage].saveButton;
+                saveApiKeyButton.classList.remove('remove-key');
+                apiKeyStatus.textContent = ''; // Clear status
             }
         }
 
@@ -472,7 +612,8 @@
 
             if (!currentApiKey) {
                 apiKeyStatus.textContent = translations[currentLanguage].apiKeyError;
-                apiKeyStatus.style.color = '#dc3545';
+                apiKeyStatus.className = 'status-error';
+                setTimeout(() => { apiKeyStatus.textContent = ''; apiKeyStatus.className = ''; }, 3000);
                 return;
             }
 
@@ -485,6 +626,8 @@
 
             loadingIndicator.classList.add('visible');
             sendButton.disabled = true; // Disable send button
+            userInput.disabled = true; // Disable input
+            clearChatButton.disabled = true; // Disable clear chat during AI response
 
             try {
                 const response = await fetch(GEMINI_API_URL + currentApiKey, {
@@ -508,15 +651,28 @@
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('API Error:', errorData);
-                    throw new Error(errorData.error?.message || 'Unknown API error');
+                    let errorMessage = errorData.error?.message || 'Unknown API error';
+                    // Special handling for common API errors
+                    if (errorMessage.includes("API key not valid")) {
+                        errorMessage = "Invalid API Key. Please check your key.";
+                    } else if (errorMessage.includes("RESOURCE_EXHAUSTED")) {
+                        errorMessage = "API rate limit exceeded or quota reached. Please try again later.";
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const data = await response.json();
-                const aiResponse = data.candidates[0].content.parts[0].text;
-                displayMessage('ai', aiResponse);
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-                // Add AI response to conversation history
-                conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                if (aiResponse) {
+                    displayMessage('ai', aiResponse);
+                    // Add AI response to conversation history
+                    conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                } else {
+                    displayMessage('ai', 'Received an empty or malformed response from AI.');
+                    console.error('Empty or malformed AI response:', data);
+                }
+
 
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -528,13 +684,23 @@
             } finally {
                 loadingIndicator.classList.remove('visible');
                 sendButton.disabled = false;
+                userInput.disabled = false;
+                clearChatButton.disabled = false;
+                userInput.focus(); // Focus back on input
             }
+        }
+
+        // --- Clear Chat Functionality ---
+        function clearChat() {
+            chatHistory.innerHTML = '';
+            conversationHistory = [];
         }
 
         // --- Event Listeners ---
         saveApiKeyButton.addEventListener('click', saveApiKey);
         languageSelector.addEventListener('change', (e) => switchLanguage(e.target.value));
         sendButton.addEventListener('click', sendMessage);
+        clearChatButton.addEventListener('click', clearChat); // Event listener for clear chat
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault(); // Prevent new line
@@ -544,8 +710,8 @@
 
         // Auto-resize textarea
         userInput.addEventListener('input', () => {
-            userInput.style.height = 'auto';
-            userInput.style.height = userInput.scrollHeight + 'px';
+            userInput.style.height = 'auto'; // Reset height
+            userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
         });
 
         // --- Initialization ---
@@ -553,7 +719,7 @@
             // Load saved language or default
             const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'en';
             languageSelector.value = savedLanguage;
-            switchLanguage(savedLanguage); // Apply initial translations
+            switchLanguage(savedLanguage); // Apply initial translations and HTML lang attribute
 
             loadApiKey(); // Load API key
         });
